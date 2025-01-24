@@ -43,6 +43,7 @@ pub mod redsys;
 pub mod shift4;
 pub mod square;
 pub mod stax;
+pub mod stripebilling;
 pub mod taxjar;
 pub mod thunes;
 pub mod tsys;
@@ -64,8 +65,8 @@ pub use self::{
     jpmorgan::Jpmorgan, mollie::Mollie, multisafepay::Multisafepay, nexinets::Nexinets,
     nexixpay::Nexixpay, nomupay::Nomupay, novalnet::Novalnet, paybox::Paybox, payeezy::Payeezy,
     payu::Payu, placetopay::Placetopay, powertranz::Powertranz, prophetpay::Prophetpay,
-    rapyd::Rapyd, razorpay::Razorpay, redsys::Redsys, shift4::Shift4, square::Square, stax::Stax,
+    rapyd::Rapyd, razorpay::Razorpay, redsys::Redsys, shift4::Shift4, square::Square, stripebilling::Stripebilling, stax::Stax,
     taxjar::Taxjar, thunes::Thunes, tsys::Tsys,
     unified_authentication_service::UnifiedAuthenticationService, volt::Volt, worldline::Worldline,
-    worldpay::Worldpay, xendit::Xendit, zen::Zen, zsl::Zsl,
+    worldpay::Worldpay, xendit::Xendit, zen::Zen, zsl::Zsl, 
 };
