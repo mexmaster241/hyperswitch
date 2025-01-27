@@ -572,7 +572,8 @@ pub struct ConnectorInfo {
     /// Display name of the Connector
     pub display_name: &'static str,
     /// Description of the connector.
-    pub description: &'static str,
+    pub description: String,
+
     /// Connector Type
     pub connector_type: common_enums::PaymentConnectorCategory,
 }
