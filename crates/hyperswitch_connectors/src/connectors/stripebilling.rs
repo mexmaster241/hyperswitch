@@ -1,7 +1,9 @@
 pub mod transformers;
-
 use error_stack::{report, ResultExt};
-use masking::{ExposeInterface, Mask};
+use masking::{ExposeInterface, Mask, Secret};
+use serde_json::json;
+
+use std::collections::HashMap;
 
 use common_utils::{
     errors::CustomResult,
@@ -19,16 +21,17 @@ use hyperswitch_domain_models::{
             SetupMandate, Void,
         },
         refunds::{Execute, RSync},
+        webhooks::GetRecoveryDetails,
     },
     router_request_types::{
         AccessTokenRequestData, PaymentMethodTokenizationData,
         PaymentsAuthorizeData, PaymentsCancelData, PaymentsCaptureData, PaymentsSessionData,
-        PaymentsSyncData, RefundsData, SetupMandateRequestData,
+        PaymentsSyncData, RefundsData, SetupMandateRequestData, GetRecoveryDetailsRequestData
     },
-    router_response_types::{PaymentsResponseData, RefundsResponseData},
+    router_response_types::{PaymentsResponseData, RefundsResponseData, GetRecoveryDetailsResponseData},
     types::{
         PaymentsAuthorizeRouterData,
-        PaymentsCaptureRouterData, PaymentsSyncRouterData, RefundSyncRouterData, RefundsRouterData,
+        PaymentsCaptureRouterData, PaymentsSyncRouterData, RefundSyncRouterData, RefundsRouterData, FetchPaymentAttemptDetailsRouterData
     },
 };
 use hyperswitch_interfaces::{
@@ -46,6 +49,9 @@ use crate::{
 };
 
 use transformers as stripebilling;
+use transformers::{StripebillingWebhookBody,StripebillingRecoveryDetailsData};
+use hyperswitch_interfaces::recovery::RecoveryPayload;
+
 
 #[derive(Clone)]
 pub struct Stripebilling {
@@ -525,28 +531,208 @@ impl
     }
 }
 
+impl 
+    ConnectorIntegration<
+        GetRecoveryDetails,
+        GetRecoveryDetailsRequestData, 
+        GetRecoveryDetailsResponseData
+    > for Stripebilling
+{
+    fn get_headers(
+        &self,
+        req: &FetchPaymentAttemptDetailsRouterData,
+        connectors: &Connectors,
+    ) -> CustomResult<Vec<(String, masking::Maskable<String>)>, errors::ConnectorError> {
+        self.build_headers(req, connectors)
+    }
+
+    fn get_content_type(&self) -> &'static str {
+        self.common_get_content_type()
+    }
+
+    fn get_url(
+        &self,
+        req: &FetchPaymentAttemptDetailsRouterData,
+        connectors: &Connectors,
+    ) -> CustomResult<String, errors::ConnectorError> {
+        Ok(format!(
+            "{}v1/charges/{}",
+            self.base_url(connectors),
+            req.request.payment_attempt_id
+        ))
+    }
+
+
+    fn build_request(
+        &self,
+        req: &FetchPaymentAttemptDetailsRouterData,
+        connectors: &Connectors,
+    ) -> CustomResult<Option<Request>, errors::ConnectorError> {
+        let request = RequestBuilder::new()
+            .method(Method::Get)
+            .url(&types::FetchPaymentAttemptDetailsType::get_url(self,req, connectors)?)
+            .attach_default_headers()
+            .headers(types::FetchPaymentAttemptDetailsType::get_headers(self,req,connectors)?)
+            .build();
+        Ok(Some(request))
+    }
+
+
+    fn handle_response(
+        &self,
+        data: &FetchPaymentAttemptDetailsRouterData,
+        event_builder: Option<&mut ConnectorEvent>,
+        res: Response,
+    ) -> CustomResult<FetchPaymentAttemptDetailsRouterData, errors::ConnectorError>
+    {
+       //Todo :: parse the reponse to stripe specific data
+       //after parsing the data event bilder will log it in grafana maybe
+       //after that we need to return thr router data and we should build it using response router data
+
+    
+    }
+
+    fn get_error_response(
+        &self,
+        res: Response,
+        event_builder: Option<&mut ConnectorEvent>,
+    ) -> CustomResult<ErrorResponse, errors::ConnectorError> {
+        self.build_error_response(res,event_builder)
+    }
+
+    fn get_5xx_error_response(
+        &self,
+        res: Response,
+        event_builder: Option<&mut ConnectorEvent>,
+    ) -> CustomResult<ErrorResponse, errors::ConnectorError> {
+        event_builder.map(|event| event.set_error(json!({"error": res.response.escape_ascii().to_string(), "status_code": res.status_code})));
+        let error_message = match res.status_code {
+            500 => "internal_server_error",
+            501 => "not_implemented",
+            502 => "bad_gateway",
+            503 => "service_unavailable",
+            504 => "gateway_timeout",
+            505 => "http_version_not_supported",
+            506 => "variant_also_negotiates",
+            507 => "insufficient_storage",
+            508 => "loop_detected",
+            510 => "not_extended",
+            511 => "network_authentication_required",
+            _ => "unknown_error",
+        };
+        Ok(ErrorResponse {
+            code: res.status_code.to_string(),
+            message: error_message.to_string(),
+            reason: String::from_utf8(res.response.to_vec()).ok(),
+            status_code: res.status_code,
+            attempt_status: None,
+            connector_transaction_id: None,
+        })
+    }
+
+}
+
 #[async_trait::async_trait]
 impl webhooks::IncomingWebhook for Stripebilling {
-    fn get_webhook_object_reference_id(
+    fn get_webhook_source_verification_algorithm(
         &self,
         _request: &webhooks::IncomingWebhookRequestDetails<'_>,
+    ) -> CustomResult<Box<dyn common_utils::crypto::VerifySignature + Send>, errors::ConnectorError> {
+        Ok(Box::new(common_utils::crypto::HmacSha256))
+    }
+
+    fn get_webhook_source_verification_signature(
+        &self,
+        request: &webhooks::IncomingWebhookRequestDetails<'_>,
+        _connector_webhook_secrets: &api_models::webhooks::ConnectorWebhookSecrets,
+    ) -> CustomResult<Vec<u8>, errors::ConnectorError> {
+        //signature contains the timestamp and the signature and signature will have the versions we need only v1
+        //handled where the signature is needed
+        let mut header_hashmap = get_signature_elements_from_header(request.headers)?;
+        let signature = header_hashmap.remove("v1").ok_or(errors::ConnectorError::WebhookSignatureNotFound)?;
+        hex::decode(signature).change_context(errors::ConnectorError::WebhookSignatureNotFound)
+    }
+
+    fn get_webhook_source_verification_message(
+        &self,
+        request : &webhooks::IncomingWebhookRequestDetails<'_>,
+        _merchant_id : &common_utils::id_type::MerchantId,
+        _connector_webhook_secrets : &api_models::webhooks::ConnectorWebhookSecrets
+    )->CustomResult<Vec<u8>,errors::ConnectorError>{
+        let mut header_hashmap = get_signature_elements_from_header(request.headers)?;
+        let timestamp = header_hashmap.remove("t").ok_or(errors::ConnectorError::WebhookSignatureNotFound)?;
+        Ok(format!(
+            "{}.{}",
+            String::from_utf8_lossy(&timestamp),
+            String::from_utf8_lossy(&request.body)
+        ).into_bytes())
+    }
+
+
+    fn get_webhook_object_reference_id(
+        &self,
+        request: &webhooks::IncomingWebhookRequestDetails<'_>,
     ) -> CustomResult<api_models::webhooks::ObjectReferenceId, errors::ConnectorError> {
-        Err(report!(errors::ConnectorError::WebhooksNotImplemented))
+        let webhook = StripebillingWebhookBody::get_webhook_object_from_body(request.body)
+            .change_context(errors::ConnectorError::WebhookReferenceIdNotFound)?;
+        Ok(api_models::webhooks::ObjectReferenceId::InvoiceId(
+            api_models::webhooks::InvoiceIdType::ConnectorInvoiceId(webhook.data.object.invoice_id),
+        ))
     }
 
     fn get_webhook_event_type(
         &self,
-        _request: &webhooks::IncomingWebhookRequestDetails<'_>,
+        request: &webhooks::IncomingWebhookRequestDetails<'_>,
     ) -> CustomResult<api_models::webhooks::IncomingWebhookEvent, errors::ConnectorError> {
-        Err(report!(errors::ConnectorError::WebhooksNotImplemented))
+        let webhook = StripebillingWebhookBody::get_webhook_object_from_body(request.body)
+            .change_context(errors::ConnectorError::WebhookEventTypeNotFound)?;
+        let event = match webhook.event_type {
+            transformers::StripebillingEventType::PaymentSucceeded => {
+                api_models::webhooks::IncomingWebhookEvent::RecoveryPaymentSuccess
+            }
+            transformers::StripebillingEventType::PaymentFailed => {
+                api_models::webhooks::IncomingWebhookEvent::RecoveryPaymentFailure
+            }
+            transformers::StripebillingEventType::InvoiceDeleted => {
+                api_models::webhooks::IncomingWebhookEvent::RecoveryInvoiceCancel
+            }
+        };
+        Ok(event)
     }
-
+    
     fn get_webhook_resource_object(
         &self,
-        _request: &webhooks::IncomingWebhookRequestDetails<'_>,
+        request: &webhooks::IncomingWebhookRequestDetails<'_>,
     ) -> CustomResult<Box<dyn masking::ErasedMaskSerialize>, errors::ConnectorError> {
-        Err(report!(errors::ConnectorError::WebhooksNotImplemented))
+        let webhook = StripebillingWebhookBody::get_webhook_object_from_body(request.body)
+            .change_context(errors::ConnectorError::WebhookResourceObjectNotFound)?;
+        Ok(Box::new(webhook))
     }
+
+    // fn get_recovery_details(
+    //     &self,
+    //     request: &webhooks::IncomingWebhookRequestDetails<'_>,
+    // ) -> CustomResult<RecoveryPayload, errors::ConnectorError>
+    // {
+    //     let webhook = StripebillingWebhookBody::get_webhook_object_from_body(request.body)?;
+    //     Ok(RecoveryPayload::try_from(webhook)?)
+    // }
+}
+
+fn get_signature_elements_from_header(
+    headers : &actix_web::http::header::HeaderMap
+) -> CustomResult<HashMap<String, Vec<u8>>, errors::ConnectorError>{
+    let security_header = headers.get("stripe-signature").ok_or(errors::ConnectorError::WebhookSignatureNotFound)?;
+    let security_header_str = security_header.to_str().change_context(errors::ConnectorError::WebhookSignatureNotFound)?;
+    let header_parts = security_header_str.split(',').collect::<Vec<&str>>();
+    let mut header_hashmap : HashMap<String, Vec<u8>> = HashMap::with_capacity(header_parts.len());
+
+    for header_part in header_parts{
+        let (header_key,header_value) = header_part.split_once('=').ok_or(errors::ConnectorError::WebhookSignatureNotFound)?;
+        header_hashmap.insert(header_key.to_string(),header_value.bytes().collect());
+    }
+
+    Ok(header_hashmap)
 }
 
 impl ConnectorSpecifications for Stripebilling {}

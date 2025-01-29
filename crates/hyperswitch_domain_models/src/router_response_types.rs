@@ -574,3 +574,26 @@ impl SupportedPaymentMethodsExt for SupportedPaymentMethods {
         }
     }
 }
+
+
+#[derive(Debug, Clone, serde::Deserialize)]
+pub struct GetRecoveryDetailsResponseData{
+
+    // pub transaction_id : String,
+    pub status : FetchAttemptDetailsStatus,
+    // pub amount : i64,
+    // pub currency : common_enums::Currency,
+    // pub customer : String,
+    pub payment_method : String,
+    pub error_code : String,
+    pub error_message : String,
+
+}
+
+
+#[derive(Clone, Debug,serde::Deserialize)]
+pub enum FetchAttemptDetailsStatus{
+    Succeeded,
+    Failed,
+    Pending
+}

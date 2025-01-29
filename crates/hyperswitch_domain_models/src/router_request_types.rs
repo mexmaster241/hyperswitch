@@ -884,3 +884,8 @@ pub struct SetupMandateRequestData {
     pub minor_amount: Option<MinorUnit>,
     pub shipping_cost: Option<MinorUnit>,
 }
+
+#[derive(Debug, Clone)]
+pub struct GetRecoveryDetailsRequestData{
+    pub payment_attempt_id : String,
+}

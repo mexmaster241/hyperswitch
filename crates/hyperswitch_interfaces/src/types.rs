@@ -15,7 +15,7 @@ use hyperswitch_domain_models::{
         },
         refunds::{Execute, RSync},
         unified_authentication_service::{PostAuthenticate, PreAuthenticate},
-        webhooks::VerifyWebhookSource,
+        webhooks::{VerifyWebhookSource, GetRecoveryDetails},
     },
     router_request_types::{
         unified_authentication_service::{
@@ -30,11 +30,13 @@ use hyperswitch_domain_models::{
         PaymentsSessionData, PaymentsSyncData, PaymentsTaxCalculationData, RefundsData,
         RetrieveFileRequestData, SdkPaymentsSessionUpdateData, SetupMandateRequestData,
         SubmitEvidenceRequestData, UploadFileRequestData, VerifyWebhookSourceRequestData,
+        GetRecoveryDetailsRequestData,
     },
     router_response_types::{
         AcceptDisputeResponse, DefendDisputeResponse, MandateRevokeResponseData,
         PaymentsResponseData, RefundsResponseData, RetrieveFileResponse, SubmitEvidenceResponse,
-        TaxCalculationResponseData, UploadFileResponse, VerifyWebhookSourceResponseData,
+        TaxCalculationResponseData, UploadFileResponse, VerifyWebhookSourceResponseData, 
+        GetRecoveryDetailsResponseData
     },
 };
 #[cfg(feature = "payouts")]
@@ -204,4 +206,11 @@ pub type UasPostAuthenticationType = dyn ConnectorIntegration<
     PostAuthenticate,
     UasPostAuthenticationRequestData,
     UasAuthenticationResponseData,
+>;
+
+/// Type alias for `ConnectorIntegration<GetRecoveryDetails, GetRecoveryDetailsRequestData, GetRecoveryDetailsResponseData>`
+pub type FetchPaymentAttemptDetailsType = dyn ConnectorIntegration<
+    GetRecoveryDetails, 
+    GetRecoveryDetailsRequestData, 
+    GetRecoveryDetailsResponseData
 >;

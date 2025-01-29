@@ -6,7 +6,7 @@ use crate::{
         AccessTokenAuth, Authorize, AuthorizeSessionToken, CalculateTax, Capture,
         CompleteAuthorize, CreateConnectorCustomer, Execute, PSync, PaymentMethodToken,
         PostAuthenticate, PostSessionTokens, PreAuthenticate, PreProcessing, RSync, Session,
-        SetupMandate, Void,
+        SetupMandate, Void, GetRecoveryDetails
     },
     router_request_types::{
         unified_authentication_service::{
@@ -17,10 +17,10 @@ use crate::{
         ConnectorCustomerData, PaymentMethodTokenizationData, PaymentsAuthorizeData,
         PaymentsCancelData, PaymentsCaptureData, PaymentsPostSessionTokensData,
         PaymentsPreProcessingData, PaymentsSessionData, PaymentsSyncData,
-        PaymentsTaxCalculationData, RefundsData, SetupMandateRequestData,
+        PaymentsTaxCalculationData, RefundsData, SetupMandateRequestData, GetRecoveryDetailsRequestData
     },
     router_response_types::{
-        PaymentsResponseData, RefundsResponseData, TaxCalculationResponseData,
+        PaymentsResponseData, RefundsResponseData, TaxCalculationResponseData, GetRecoveryDetailsResponseData
     },
 };
 
@@ -56,3 +56,6 @@ pub type UasPostAuthenticationRouterData =
 
 pub type UasPreAuthenticationRouterData =
     RouterData<PreAuthenticate, UasPreAuthenticationRequestData, UasAuthenticationResponseData>;
+
+pub type FetchPaymentAttemptDetailsRouterData = 
+    RouterData<GetRecoveryDetails, GetRecoveryDetailsRequestData, GetRecoveryDetailsResponseData>;

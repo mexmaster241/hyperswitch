@@ -1,13 +1,16 @@
 use common_enums::enums;
 use serde::{Deserialize, Serialize};
 use masking::Secret;
-use common_utils::types::{StringMinorUnit};
+use common_utils::{errors::CustomResult,ext_traits::ByteSliceExt};
+use common_utils::types::{ StringMinorUnit };
+use error_stack::ResultExt;
 use hyperswitch_domain_models::{
     payment_method_data::PaymentMethodData,
     router_data::{ConnectorAuthType, RouterData},
     router_flow_types::refunds::{Execute, RSync},
-    router_request_types::ResponseId,
-    router_response_types::{PaymentsResponseData, RefundsResponseData},
+    router_flow_types::GetRecoveryDetails,
+    router_request_types::{ResponseId,GetRecoveryDetailsRequestData},
+    router_response_types::{PaymentsResponseData, RefundsResponseData, GetRecoveryDetailsResponseData},
     types::{PaymentsAuthorizeRouterData, RefundsRouterData},
 };
 use hyperswitch_interfaces::errors;
@@ -15,6 +18,7 @@ use crate::{
     types::{RefundsResponseRouterData, ResponseRouterData},
     utils::PaymentsAuthorizeRequestData,
 };
+
 
 //TODO: Fill the struct with respective fields
 pub struct StripebillingRouterData<T> {
@@ -230,3 +234,115 @@ pub struct StripebillingErrorResponse {
     pub message: String,
     pub reason: Option<String>,
 }
+
+
+#[derive(Debug,Serialize,Deserialize)]
+pub struct StripebillingWebhookBody {
+    #[serde(rename = "type")]
+    pub event_type : StripebillingEventType,
+    pub data : StripebillingWebhookData
+}
+
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "snake_case")]
+pub enum StripebillingEventType {
+    #[serde(rename="invoice.paid")]
+    PaymentSucceeded,
+    #[serde(rename="invoice.payment_failed")]
+    PaymentFailed,
+    #[serde(rename="invoice.voided")]
+    InvoiceDeleted
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct StripebillingWebhookData {
+    pub object : StripebillingWebhookObject
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct StripebillingWebhookObject{
+    //invoiceid
+    #[serde(rename="id")]
+    pub invoice_id : String,
+
+    pub currency : enums::Currency,
+    //customer id
+    pub customer : String,
+    #[serde(rename="amount_remaining")]
+    pub amount :  i64,
+    //charge id to get payment method
+    pub charge : String
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct StripebillingRecoveryDetailsData {
+
+    pub charge_id : String,
+    pub status : StripebillingChargeStatus,
+    pub amount : i64,
+    pub currency : enums::Currency,
+    pub customer : String,
+    pub payment_method : String,
+    pub failure_code : String,
+    pub failure_message : String,
+
+}
+
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "snake_case")]
+pub enum StripebillingChargeStatus{
+    Succeeded,
+    Failed,
+    Pending
+}
+
+
+impl StripebillingWebhookBody {
+    pub fn get_webhook_object_from_body(
+        body: &[u8],
+    ) -> CustomResult<StripebillingWebhookBody, errors::ConnectorError> {
+        let webhook_body = body
+            .parse_struct::<StripebillingWebhookBody>("StripebillingWebhookBody")
+            .change_context(errors::ConnectorError::WebhookBodyDecodingFailed)?;
+        Ok(webhook_body)
+    }
+}
+
+
+
+// impl TryFrom<StripebillingWebhookBody> for hyperswitch_interfaces::recovery::RecoveryPayload{
+//     type Error = error_stack::Report<errors::ConnectorError>;
+//     fn try_from(
+//         item: StripebillingWebhookBody,
+//     ) -> Result<Self,Self::Error>{
+//         let amount = item.data.object.amount.clone();
+//         let currency = item.data.object.currency.clone();
+//         let merchant_reference_id = item.data.object.invoice_id.clone();
+//         let connector_transaction_id = item.content.transaction.as_ref().map(|trans| trans.id_at_gateway.clone());        
+//         let error_code = item.content.transaction.as_ref().and_then(|trans| trans.error_code.clone());
+//         let error_message = item.content.transaction.as_ref().and_then(|trans| trans.error_text.clone());
+//         let (connector_customer_id, connector_mandate_id) = match &item.content.customer {
+//             Some(customer) =>{
+//                 let (customer_id,mandate_id) =customer.find_connector_ids()?;
+//                 (Some(customer_id),Some(mandate_id))
+//             },
+//             None => (None, None),
+//         };
+//         let connector_account_reference_id = item.content.transaction.as_ref().and_then(|trans|trans.gateway_account_id.clone());
+//         let created_at = item.content.transaction.as_ref().map(|trans| trans.date.clone());
+//         Ok(hyperswitch_interfaces::recovery::RecoveryPayload{
+//             amount,
+//             currency,
+//             merchant_reference_id,
+//             error_code,
+//             error_message,
+//             connector_customer_id,
+//             connector_mandate_id,
+//             connector_transaction_id,
+//             connector_account_reference_id,
+//             created_at
+//         })
+//     }
+// }
