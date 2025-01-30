@@ -10,8 +10,8 @@ use hyperswitch_domain_models::{
     router_flow_types::refunds::{Execute, RSync},
     router_flow_types::GetRecoveryDetails,
     router_request_types::{ResponseId,GetRecoveryDetailsRequestData},
-    router_response_types::{PaymentsResponseData, RefundsResponseData, GetRecoveryDetailsResponseData},
-    types::{PaymentsAuthorizeRouterData, RefundsRouterData},
+    router_response_types::{PaymentsResponseData, RefundsResponseData, GetRecoveryDetailsResponseData,FetchAttemptDetailsStatus},
+    types::{PaymentsAuthorizeRouterData, RefundsRouterData,GetRecoveryDetailsRouterData},
 };
 use hyperswitch_interfaces::errors;
 use crate::{
@@ -298,6 +298,45 @@ pub enum StripebillingChargeStatus{
     Pending
 }
 
+impl From<StripebillingChargeStatus> for FetchAttemptDetailsStatus {
+    fn from(status: StripebillingChargeStatus) -> Self {
+        match status {
+            StripebillingChargeStatus::Succeeded => Self::Succeeded,
+            StripebillingChargeStatus::Failed => Self::Failed,
+            StripebillingChargeStatus::Pending => Self::Pending,
+        }
+    }
+}
+
+impl TryFrom<
+    ResponseRouterData<
+        GetRecoveryDetails,
+        StripebillingRecoveryDetailsData,
+        GetRecoveryDetailsRequestData,
+        GetRecoveryDetailsResponseData
+        >>
+    for GetRecoveryDetailsRouterData
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+    fn try_from(item: ResponseRouterData<
+                            GetRecoveryDetails,
+                            StripebillingRecoveryDetailsData,
+                            GetRecoveryDetailsRequestData,
+                            GetRecoveryDetailsResponseData
+                    >   
+    ) -> Result<Self,Self::Error> {
+        Ok(Self {
+            response: Ok(GetRecoveryDetailsResponseData{
+                status: item.response.status.into(),
+                payment_method: item.response.payment_method,
+                error_code: item.response.failure_code,
+                error_message: item.response.failure_message,
+            }),
+            ..item.data
+        })
+    }
+}
+
 
 impl StripebillingWebhookBody {
     pub fn get_webhook_object_from_body(
@@ -312,37 +351,65 @@ impl StripebillingWebhookBody {
 
 
 
-// impl TryFrom<StripebillingWebhookBody> for hyperswitch_interfaces::recovery::RecoveryPayload{
-//     type Error = error_stack::Report<errors::ConnectorError>;
-//     fn try_from(
-//         item: StripebillingWebhookBody,
-//     ) -> Result<Self,Self::Error>{
-//         let amount = item.data.object.amount.clone();
-//         let currency = item.data.object.currency.clone();
-//         let merchant_reference_id = item.data.object.invoice_id.clone();
-//         let connector_transaction_id = item.content.transaction.as_ref().map(|trans| trans.id_at_gateway.clone());        
-//         let error_code = item.content.transaction.as_ref().and_then(|trans| trans.error_code.clone());
-//         let error_message = item.content.transaction.as_ref().and_then(|trans| trans.error_text.clone());
-//         let (connector_customer_id, connector_mandate_id) = match &item.content.customer {
-//             Some(customer) =>{
-//                 let (customer_id,mandate_id) =customer.find_connector_ids()?;
-//                 (Some(customer_id),Some(mandate_id))
-//             },
-//             None => (None, None),
-//         };
-//         let connector_account_reference_id = item.content.transaction.as_ref().and_then(|trans|trans.gateway_account_id.clone());
-//         let created_at = item.content.transaction.as_ref().map(|trans| trans.date.clone());
-//         Ok(hyperswitch_interfaces::recovery::RecoveryPayload{
-//             amount,
-//             currency,
-//             merchant_reference_id,
-//             error_code,
-//             error_message,
-//             connector_customer_id,
-//             connector_mandate_id,
-//             connector_transaction_id,
-//             connector_account_reference_id,
-//             created_at
-//         })
-//     }
+impl TryFrom<StripebillingWebhookBody> for hyperswitch_interfaces::recovery::RecoveryPayload{
+    type Error = error_stack::Report<errors::ConnectorError>;
+    fn try_from(
+        item: StripebillingWebhookBody,
+    ) -> Result<Self,Self::Error>{
+        let amount = item.data.object.amount.clone();
+        let currency = item.data.object.currency.clone();
+        let merchant_reference_id = item.data.object.invoice_id.clone();
+        let connector_transaction_id = Some(item.data.object.charge.clone());
+
+        // Get charge details here
+
+        let error_code = item.content.transaction.as_ref().and_then(|trans| trans.error_code.clone());
+        let error_message = item.content.transaction.as_ref().and_then(|trans| trans.error_text.clone());
+        let (connector_customer_id, connector_mandate_id) = match &item.content.customer {
+            Some(customer) =>{
+                let (customer_id,mandate_id) =customer.find_connector_ids()?;
+                (Some(customer_id),Some(mandate_id))
+            },
+            None => (None, None),
+        };
+        let connector_account_reference_id = item.content.transaction.as_ref().and_then(|trans|trans.gateway_account_id.clone());
+        let created_at = item.content.transaction.as_ref().map(|trans| trans.date.clone());
+        Ok(hyperswitch_interfaces::recovery::RecoveryPayload{
+            amount,
+            currency,
+            merchant_reference_id,
+            error_code,
+            error_message,
+            connector_customer_id,
+            connector_mandate_id,
+            connector_transaction_id,
+            connector_account_reference_id,
+            created_at
+        })
+    }
+}
+
+
+
+// pub struct RecoveryPayload {
+//     /// amount
+//     pub amount: MinorUnit,
+//     /// currency
+//     pub currency: common_enums::enums::Currency,
+//     /// merchant reference id ex: invoice_id
+//     pub merchant_reference_id: String,
+//     /// connector transaction id
+//     pub connector_transaction_id: Option<String>,
+//     /// error code for failure payments
+//     pub error_code: Option<String>,
+//     /// error_message for failure messages
+//     pub error_message: Option<String>,
+//     /// mandate id of the connector
+//     pub connector_mandate_id: Option<String>,
+//     /// connnector customer id
+//     pub connector_customer_id: Option<String>,
+//     /// payment merchant connnector account reference id
+//     pub connector_account_reference_id: Option<String>,
+//     /// created_at
+//     pub created_at: Option<PrimitiveDateTime>,
 // }

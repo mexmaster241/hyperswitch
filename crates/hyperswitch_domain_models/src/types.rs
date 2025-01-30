@@ -57,5 +57,5 @@ pub type UasPostAuthenticationRouterData =
 pub type UasPreAuthenticationRouterData =
     RouterData<PreAuthenticate, UasPreAuthenticationRequestData, UasAuthenticationResponseData>;
 
-pub type FetchPaymentAttemptDetailsRouterData = 
+pub type GetRecoveryDetailsRouterData = 
     RouterData<GetRecoveryDetails, GetRecoveryDetailsRequestData, GetRecoveryDetailsResponseData>;

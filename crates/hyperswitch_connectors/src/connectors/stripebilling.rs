@@ -31,7 +31,7 @@ use hyperswitch_domain_models::{
     router_response_types::{PaymentsResponseData, RefundsResponseData, GetRecoveryDetailsResponseData},
     types::{
         PaymentsAuthorizeRouterData,
-        PaymentsCaptureRouterData, PaymentsSyncRouterData, RefundSyncRouterData, RefundsRouterData, FetchPaymentAttemptDetailsRouterData
+        PaymentsCaptureRouterData, PaymentsSyncRouterData, RefundSyncRouterData, RefundsRouterData, GetRecoveryDetailsRouterData
     },
 };
 use hyperswitch_interfaces::{
@@ -540,7 +540,7 @@ impl
 {
     fn get_headers(
         &self,
-        req: &FetchPaymentAttemptDetailsRouterData,
+        req: &GetRecoveryDetailsRouterData,
         connectors: &Connectors,
     ) -> CustomResult<Vec<(String, masking::Maskable<String>)>, errors::ConnectorError> {
         self.build_headers(req, connectors)
@@ -552,7 +552,7 @@ impl
 
     fn get_url(
         &self,
-        req: &FetchPaymentAttemptDetailsRouterData,
+        req: &GetRecoveryDetailsRouterData,
         connectors: &Connectors,
     ) -> CustomResult<String, errors::ConnectorError> {
         Ok(format!(
@@ -562,10 +562,9 @@ impl
         ))
     }
 
-
     fn build_request(
         &self,
-        req: &FetchPaymentAttemptDetailsRouterData,
+        req: &GetRecoveryDetailsRouterData,
         connectors: &Connectors,
     ) -> CustomResult<Option<Request>, errors::ConnectorError> {
         let request = RequestBuilder::new()
@@ -580,16 +579,24 @@ impl
 
     fn handle_response(
         &self,
-        data: &FetchPaymentAttemptDetailsRouterData,
+        data: &GetRecoveryDetailsRouterData,
         event_builder: Option<&mut ConnectorEvent>,
         res: Response,
-    ) -> CustomResult<FetchPaymentAttemptDetailsRouterData, errors::ConnectorError>
+    ) -> CustomResult<GetRecoveryDetailsRouterData, errors::ConnectorError>
     {
-       //Todo :: parse the reponse to stripe specific data
-       //after parsing the data event bilder will log it in grafana maybe
-       //after that we need to return thr router data and we should build it using response router data
+        
+       let response : transformers::StripebillingRecoveryDetailsData = res
+            .response.parse_struct::<transformers::StripebillingRecoveryDetailsData>("StripebillingRecoveryDetailsData")
+            .change_context(errors::ConnectorError::ResponseDeserializationFailed)?;
 
-    
+       event_builder.map(|i| i.set_response_body(&response));
+       router_env::logger::info!(connector_response=?response);
+
+       GetRecoveryDetailsRouterData::try_from( ResponseRouterData {
+        response,
+        data: data.clone(),
+        http_code: res.status_code,
+       })
     }
 
     fn get_error_response(
