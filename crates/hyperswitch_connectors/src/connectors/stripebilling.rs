@@ -2,6 +2,7 @@ pub mod transformers;
 use error_stack::{report, ResultExt};
 use masking::{ExposeInterface, Mask, Secret};
 use serde_json::json;
+use common_utils::ext_traits::ByteSliceExt;
 
 use std::collections::HashMap;
 
@@ -716,14 +717,27 @@ impl webhooks::IncomingWebhook for Stripebilling {
         Ok(Box::new(webhook))
     }
 
-    // fn get_recovery_details(
-    //     &self,
-    //     request: &webhooks::IncomingWebhookRequestDetails<'_>,
-    // ) -> CustomResult<RecoveryPayload, errors::ConnectorError>
-    // {
-    //     let webhook = StripebillingWebhookBody::get_webhook_object_from_body(request.body)?;
-    //     Ok(RecoveryPayload::try_from(webhook)?)
-    // }
+    fn get_recovery_details(
+        &self,
+        request: &webhooks::IncomingWebhookRequestDetails<'_>,
+        additional_data : Option<Vec<u8>>
+    ) -> CustomResult<RecoveryPayload, errors::ConnectorError>
+    {
+        let webhook = StripebillingWebhookBody::get_webhook_object_from_body(request.body)?;
+
+        match additional_data{
+            Some(data)=>{
+                let additional_data_payload = data
+                .parse_struct::<StripebillingRecoveryDetailsData>("StripebillingRecoveryDetailsData")
+                .change_context(errors::ConnectorError::WebhookBodyDecodingFailed)?;
+
+                let recovery_payload = transformers::StripebillingRevenueRecoveryDetails::from_webhook_and_additional_data(&webhook,&additional_data_payload);
+                 
+                Ok(RecoveryPayload::try_from(recovery_payload)?)
+            },
+            None => Ok(RecoveryPayload::try_from(webhook)?)
+        }
+    }
 }
 
 fn get_signature_elements_from_header(
@@ -741,6 +755,7 @@ fn get_signature_elements_from_header(
 
     Ok(header_hashmap)
 }
+
 
 impl ConnectorSpecifications for Stripebilling {}
    

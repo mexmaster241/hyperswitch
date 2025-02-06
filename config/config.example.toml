@@ -150,6 +150,9 @@ connectors_with_delayed_session_response = "trustpay,payme" # List of connectors
 [webhook_source_verification_call]
 connectors_with_webhook_source_verification_call = "paypal" # List of connectors which has additional source verification api-call
 
+[reveune_recovery_additonal_details_call]
+connectors_with_revenue_recovery_additonal_details_call = "stripebilling" # List of connectors which has additional revenue recovery details api-call
+
 [jwekey] # 4 priv/pub key pair
 vault_encryption_key = ""       # public key in pem format, corresponding private key in basilisk-hs
 rust_locker_encryption_key = "" # public key in pem format, corresponding private key in rust locker

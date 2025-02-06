@@ -343,13 +343,14 @@ impl api::IncomingWebhook for ConnectorEnum {
     fn get_recovery_details(
         &self,
         request: &IncomingWebhookRequestDetails<'_>,
+        additional_data : Option<Vec<u8>>
     ) -> CustomResult<
         hyperswitch_interfaces::recovery::RecoveryPayload,
         errors::ConnectorError,
     > {
         match self {
-            Self::Old(connector) => connector.get_recovery_details(request),
-            Self::New(connector) => connector.get_recovery_details(request),
+            Self::Old(connector) => connector.get_recovery_details(request,additional_data),
+            Self::New(connector) => connector.get_recovery_details(request,additional_data),
         }
     }
 }

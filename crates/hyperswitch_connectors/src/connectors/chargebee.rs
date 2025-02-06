@@ -637,6 +637,7 @@ impl webhooks::IncomingWebhook for Chargebee {
     fn get_recovery_details(
         &self,
         request: &webhooks::IncomingWebhookRequestDetails<'_>,
+        _additional_data : Option<Vec<u8>>
     ) -> CustomResult<RecoveryPayload, errors::ConnectorError>
     {
         let webhook = ChargebeeWebhookBody::get_webhook_object_from_body(request.body)?;

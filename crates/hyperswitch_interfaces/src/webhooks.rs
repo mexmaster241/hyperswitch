@@ -284,6 +284,7 @@ pub trait IncomingWebhook: ConnectorCommon + Sync {
     fn get_recovery_details(
         &self,
         _request: &IncomingWebhookRequestDetails<'_>,
+        _additional_data : Option<Vec<u8>>
     ) -> CustomResult<
         RecoveryPayload,
         errors::ConnectorError,

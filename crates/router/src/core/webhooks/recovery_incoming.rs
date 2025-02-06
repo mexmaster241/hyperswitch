@@ -36,7 +36,8 @@ pub async fn recovery_incoming_webhook_flow(
     match source_verified {
         true => {
             let _db = &*state.store;
-            let invoice_details = connector.get_recovery_details(request_details).change_context(errors::ApiErrorResponse::InternalServerError)?;
+
+            let invoice_details = connector.get_recovery_details(request_details,None).change_context(errors::ApiErrorResponse::InternalServerError)?;
             // this should be fetched using merchant reference id api
             let _payment_intent = invoice_details.get_intent()?;
             let payment_attempt = invoice_details.get_attempt()?;

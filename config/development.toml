@@ -624,6 +624,9 @@ connectors_with_delayed_session_response = "trustpay,payme"
 [webhook_source_verification_call]
 connectors_with_webhook_source_verification_call = "paypal"
 
+[reveune_recovery_additonal_details_call]
+connectors_with_revenue_recovery_additonal_details_call = "stripebilling" # List of connectors which has additional revenue recovery details api-call
+
 [mandates.supported_payment_methods]
 bank_debit.ach = { connector_list = "gocardless,adyen,stripe" }
 bank_debit.becs = { connector_list = "gocardless,stripe,adyen" }
