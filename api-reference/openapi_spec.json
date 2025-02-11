@@ -5227,10 +5227,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/EventListItemResponse"
-                  }
+                  "$ref": "#/components/schemas/TotalEventsResponse"
                 }
               }
             }
@@ -25541,6 +25538,25 @@
             "type": "boolean",
             "description": "Status of KV for the specific merchant",
             "example": true
+          }
+        }
+      },
+      "TotalEventsResponse": {
+        "type": "object",
+        "required": [
+          "events",
+          "total_count"
+        ],
+        "properties": {
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EventListItemResponse"
+            }
+          },
+          "total_count": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },
