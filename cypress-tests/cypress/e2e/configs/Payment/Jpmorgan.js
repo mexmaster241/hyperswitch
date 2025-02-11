@@ -321,5 +321,38 @@ export const connectorDetails = {
         },
       },
     },
+    SaveCardUseNo3DSManualCapture: {
+      Request: {
+        payment_method: "card",
+        payment_method_data: {
+          card: successfulNo3DSCardDetails,
+        },
+        currency: "USD",
+        setup_future_usage: "on_session",
+      },
+      Response: {
+        status: 200,
+        body: {
+          status: "requires_capture",
+        },
+      },
+    },
+    ZeroAuthConfirmPayment: {
+      Request: {
+        payment_type: "setup_mandate",
+        payment_method: "card",
+        payment_method_type: "credit",
+        payment_method_data: {
+          card: successfulNo3DSCardDetails,
+        },
+      },
+      Response: {
+        status: 200,
+        body: {
+          status: "processing",
+          setup_future_usage: "off_session",
+        },
+      },
+    },
   },
 };
