@@ -354,5 +354,20 @@ export const connectorDetails = {
         },
       },
     },
+    SaveCardConfirmAutoCaptureOffSession: {
+      Request: {
+        setup_future_usage: "off_session",
+      },
+      Response: {
+        status: 422,
+        body: {
+          error: {
+            type: "invalid_request",
+            message: "Token is invalid or expired",
+            code: "IR_29",
+          },
+        },
+      },
+    },
   },
 };
