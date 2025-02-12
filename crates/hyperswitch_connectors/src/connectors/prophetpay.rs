@@ -2,9 +2,9 @@ pub mod transformers;
 
 use std::fmt::Debug;
 
-use common_enums::enums;
 use api_models::webhooks::{IncomingWebhookEvent, ObjectReferenceId};
 use base64::Engine;
+use common_enums::enums;
 use common_utils::{
     consts::BASE64_ENGINE,
     errors::CustomResult,
@@ -25,7 +25,10 @@ use hyperswitch_domain_models::{
         PaymentsAuthorizeData, PaymentsCancelData, PaymentsCaptureData, PaymentsSessionData,
         PaymentsSyncData, RefundsData, SetupMandateRequestData,
     },
-    router_response_types::{ConnectorInfo, PaymentMethodDetails, SupportedPaymentMethods, SupportedPaymentMethodsExt, PaymentsResponseData, RefundsResponseData},
+    router_response_types::{
+        ConnectorInfo, PaymentMethodDetails, PaymentsResponseData, RefundsResponseData,
+        SupportedPaymentMethods, SupportedPaymentMethodsExt,
+    },
     types::{
         PaymentsAuthorizeRouterData, PaymentsCancelRouterData, PaymentsCompleteAuthorizeRouterData,
         PaymentsSyncRouterData, RefundSyncRouterData, RefundsRouterData,
@@ -43,9 +46,9 @@ use hyperswitch_interfaces::{
     types::{self, Response},
     webhooks::{IncomingWebhook, IncomingWebhookRequestDetails},
 };
+use lazy_static::lazy_static;
 use masking::{Mask, PeekInterface};
 use transformers as prophetpay;
-use lazy_static::lazy_static;
 
 use crate::{constants::headers, types::ResponseRouterData};
 
@@ -762,4 +765,3 @@ impl ConnectorSpecifications for Prophetpay {
         Some(&*PROPHETPAY_SUPPORTED_WEBHOOK_FLOWS)
     }
 }
-

@@ -22,7 +22,10 @@ use hyperswitch_domain_models::{
         PaymentsCancelData, PaymentsCaptureData, PaymentsSessionData, PaymentsSyncData,
         RefundsData, SetupMandateRequestData,
     },
-    router_response_types::{ConnectorInfo, PaymentMethodDetails, PaymentsResponseData, RefundsResponseData, SupportedPaymentMethods, SupportedPaymentMethodsExt},
+    router_response_types::{
+        ConnectorInfo, PaymentMethodDetails, PaymentsResponseData, RefundsResponseData,
+        SupportedPaymentMethods, SupportedPaymentMethodsExt,
+    },
     types::{
         PaymentsAuthorizeRouterData, PaymentsCaptureRouterData, PaymentsSyncRouterData,
         RefundSyncRouterData, RefundsRouterData,
@@ -39,11 +42,11 @@ use hyperswitch_interfaces::{
     types::{PaymentsAuthorizeType, PaymentsSyncType, RefundExecuteType, RefundSyncType, Response},
     webhooks,
 };
+use lazy_static::lazy_static;
 use masking::ExposeInterface;
 use rand::distributions::DistString;
 use time::OffsetDateTime;
 use transformers as globepay;
-use lazy_static::lazy_static;
 
 use crate::{constants::headers, types::ResponseRouterData, utils::convert_amount};
 
@@ -558,8 +561,6 @@ impl webhooks::IncomingWebhook for Globepay {
         Err(report!(errors::ConnectorError::WebhooksNotImplemented))
     }
 }
-
-
 
 lazy_static! {
     static ref GLOBEPAY_SUPPORTED_PAYMENT_METHODS: SupportedPaymentMethods = {

@@ -1,9 +1,9 @@
 pub mod transformers;
 
-use common_enums::enums;
 use std::fmt::Write;
 
 use api_models::webhooks::{IncomingWebhookEvent, ObjectReferenceId};
+use common_enums::enums;
 use common_utils::{
     errors::CustomResult,
     ext_traits::BytesExt,
@@ -23,7 +23,10 @@ use hyperswitch_domain_models::{
         PaymentsCancelData, PaymentsCaptureData, PaymentsSessionData, PaymentsSyncData,
         RefundsData, SetupMandateRequestData,
     },
-    router_response_types::{ConnectorInfo, PaymentMethodDetails, SupportedPaymentMethods, SupportedPaymentMethodsExt, PaymentsResponseData, RefundsResponseData},
+    router_response_types::{
+        ConnectorInfo, PaymentMethodDetails, PaymentsResponseData, RefundsResponseData,
+        SupportedPaymentMethods, SupportedPaymentMethodsExt,
+    },
     types::{
         PaymentsAuthorizeRouterData, PaymentsCancelRouterData, PaymentsCaptureRouterData,
         PaymentsSyncRouterData, RefundSyncRouterData, RefundsRouterData, SetupMandateRouterData,
@@ -41,9 +44,9 @@ use hyperswitch_interfaces::{
     types::{self, Response},
     webhooks::{IncomingWebhook, IncomingWebhookRequestDetails},
 };
+use lazy_static::lazy_static;
 use masking::PeekInterface;
 use transformers as itaubank;
-use lazy_static::lazy_static;
 
 use crate::{
     constants::headers,
@@ -787,7 +790,6 @@ impl IncomingWebhook for Itaubank {
         Err(report!(errors::ConnectorError::WebhooksNotImplemented))
     }
 }
-
 
 lazy_static! {
     static ref ITAUBANK_SUPPORTED_PAYMENT_METHODS: SupportedPaymentMethods = {

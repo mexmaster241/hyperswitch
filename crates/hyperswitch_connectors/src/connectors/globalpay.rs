@@ -26,7 +26,10 @@ use hyperswitch_domain_models::{
         PaymentsAuthorizeData, PaymentsCancelData, PaymentsCaptureData, PaymentsSessionData,
         PaymentsSyncData, RefundsData, SetupMandateRequestData, SyncRequestType,
     },
-    router_response_types::{ConnectorInfo, PaymentMethodDetails, SupportedPaymentMethods, SupportedPaymentMethodsExt, PaymentsResponseData, RefundsResponseData},
+    router_response_types::{
+        ConnectorInfo, PaymentMethodDetails, PaymentsResponseData, RefundsResponseData,
+        SupportedPaymentMethods, SupportedPaymentMethodsExt,
+    },
     types::{
         PaymentsAuthorizeRouterData, PaymentsCancelRouterData, PaymentsCaptureRouterData,
         PaymentsCompleteAuthorizeRouterData, PaymentsSyncRouterData, RefundSyncRouterData,
@@ -49,6 +52,7 @@ use hyperswitch_interfaces::{
     },
     webhooks::{IncomingWebhook, IncomingWebhookRequestDetails},
 };
+use lazy_static::lazy_static;
 use masking::{Mask, PeekInterface};
 use requests::{GlobalpayPaymentsRequest, GlobalpayRefreshTokenRequest};
 use response::{
@@ -64,7 +68,6 @@ use crate::{
         is_mandate_supported, ForeignTryFrom, PaymentMethodDataType, RefundsRequestData,
     },
 };
-use lazy_static::lazy_static;
 
 #[derive(Clone)]
 pub struct Globalpay {
@@ -1020,9 +1023,6 @@ impl ConnectorRedirectResponse for Globalpay {
     }
 }
 
-
-
-
 lazy_static! {
     static ref GLOBEPAY_SUPPORTED_PAYMENT_METHODS: SupportedPaymentMethods = {
         let supported_capture_methods = vec![
@@ -1171,4 +1171,3 @@ impl ConnectorSpecifications for Globalpay {
         Some(&*GLOBEPAY_SUPPORTED_WEBHOOK_FLOWS)
     }
 }
-

@@ -27,7 +27,10 @@ use hyperswitch_domain_models::{
         PaymentsCaptureData, PaymentsPreProcessingData, PaymentsSessionData, PaymentsSyncData,
         RefundsData, SetupMandateRequestData,
     },
-    router_response_types::{ConnectorInfo, PaymentMethodDetails, SupportedPaymentMethods, SupportedPaymentMethodsExt, PaymentsResponseData, RefundsResponseData},
+    router_response_types::{
+        ConnectorInfo, PaymentMethodDetails, PaymentsResponseData, RefundsResponseData,
+        SupportedPaymentMethods, SupportedPaymentMethodsExt,
+    },
     types::{
         PaymentsAuthorizeRouterData, PaymentsAuthorizeSessionTokenRouterData,
         PaymentsCancelRouterData, PaymentsCaptureRouterData, PaymentsCompleteAuthorizeRouterData,
@@ -45,9 +48,9 @@ use hyperswitch_interfaces::{
     types::{self, Response},
     webhooks::{IncomingWebhook, IncomingWebhookRequestDetails},
 };
+use lazy_static::lazy_static;
 use masking::ExposeInterface;
 use transformers as nuvei;
-use lazy_static::lazy_static;
 
 use crate::{
     constants::headers,
@@ -1183,5 +1186,3 @@ impl ConnectorSpecifications for Nuvei {
         Some(&*NUVEI_SUPPORTED_WEBHOOK_FLOWS)
     }
 }
-
-
