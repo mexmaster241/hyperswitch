@@ -37,7 +37,7 @@ use hyperswitch_domain_models::router_flow_types::{
         SetupMandate, Void,
     },
     refunds::{Execute, RSync},
-    webhooks::VerifyWebhookSource,
+    webhooks::{VerifyWebhookSource,GetRecoveryDetails},
 };
 pub use hyperswitch_domain_models::{
     payment_address::PaymentAddress,
@@ -67,14 +67,14 @@ pub use hyperswitch_domain_models::{
         PaymentsSessionData, PaymentsSyncData, PaymentsTaxCalculationData, RefundsData, ResponseId,
         RetrieveFileRequestData, SdkPaymentsSessionUpdateData, SetupMandateRequestData,
         SplitRefundsRequest, SubmitEvidenceRequestData, SyncRequestType, UploadFileRequestData,
-        VerifyWebhookSourceRequestData,
+        VerifyWebhookSourceRequestData, GetRecoveryDetailsRequestData
     },
     router_response_types::{
         AcceptDisputeResponse, CaptureSyncResponse, DefendDisputeResponse, MandateReference,
         MandateRevokeResponseData, PaymentsResponseData, PreprocessingResponseId,
         RefundsResponseData, RetrieveFileResponse, SubmitEvidenceResponse,
         TaxCalculationResponseData, UploadFileResponse, VerifyWebhookSourceResponseData,
-        VerifyWebhookStatus,
+        VerifyWebhookStatus, GetRecoveryDetailsResponseData
     },
 };
 #[cfg(feature = "payouts")]
@@ -198,6 +198,9 @@ pub type VerifyWebhookSourceRouterData = RouterData<
     VerifyWebhookSourceRequestData,
     VerifyWebhookSourceResponseData,
 >;
+
+pub type GetRecoveryDetailsRouterData = 
+    RouterData<GetRecoveryDetails, GetRecoveryDetailsRequestData, GetRecoveryDetailsResponseData>;
 
 pub type SubmitEvidenceRouterData =
     RouterData<Evidence, SubmitEvidenceRequestData, SubmitEvidenceResponse>;
@@ -1030,3 +1033,4 @@ impl<F1, F2>
         }
     }
 }
+

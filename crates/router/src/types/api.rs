@@ -48,9 +48,9 @@ pub use hyperswitch_domain_models::router_flow_types::{
 pub use hyperswitch_interfaces::api::{
     ConnectorAccessToken, ConnectorAccessTokenV2, ConnectorCommon, ConnectorCommonExt,
     ConnectorMandateRevoke, ConnectorMandateRevokeV2, ConnectorVerifyWebhookSource,
-    ConnectorVerifyWebhookSourceV2, CurrencyUnit,
+    ConnectorVerifyWebhookSourceV2, CurrencyUnit, ConnectorGetRecoveryDetails, ConnectorGetRecoveryDetailsV2
 };
-use hyperswitch_interfaces::api::{UnifiedAuthenticationService, UnifiedAuthenticationServiceV2};
+use hyperswitch_interfaces::api::{ UnifiedAuthenticationService, UnifiedAuthenticationServiceV2};
 
 #[cfg(feature = "frm")]
 pub use self::fraud_check::*;
@@ -108,6 +108,7 @@ pub trait Connector:
     + ExternalAuthentication
     + TaxCalculation
     + UnifiedAuthenticationService
+    + ConnectorGetRecoveryDetails
 {
 }
 
@@ -127,7 +128,8 @@ impl<
             + ConnectorMandateRevoke
             + ExternalAuthentication
             + TaxCalculation
-            + UnifiedAuthenticationService,
+            + UnifiedAuthenticationService
+            + ConnectorGetRecoveryDetails,
     > Connector for T
 {
 }
@@ -148,6 +150,7 @@ pub trait ConnectorV2:
     + ConnectorMandateRevokeV2
     + ExternalAuthenticationV2
     + UnifiedAuthenticationServiceV2
+    + ConnectorGetRecoveryDetailsV2
 {
 }
 impl<
@@ -165,7 +168,8 @@ impl<
             + FraudCheckV2
             + ConnectorMandateRevokeV2
             + ExternalAuthenticationV2
-            + UnifiedAuthenticationServiceV2,
+            + UnifiedAuthenticationServiceV2
+            + ConnectorGetRecoveryDetailsV2,
     > ConnectorV2 for T
 {
 }
@@ -507,9 +511,9 @@ impl ConnectorData {
                 enums::Connector::Stripe => {
                     Ok(ConnectorEnum::Old(Box::new(connector::Stripe::new())))
                 }
-			    // enums::Connector::Stripebilling =>{
-                //     Ok(ConnectorEnum::Old(Box::new(connector::Stripebilling::new())))
-                // } 
+			    enums::Connector::Stripebilling =>{
+                    Ok(ConnectorEnum::Old(Box::new(connector::Stripebilling::new())))
+                } 
                 enums::Connector::Wise => Ok(ConnectorEnum::Old(Box::new(connector::Wise::new()))),
                 enums::Connector::Worldline => {
                     Ok(ConnectorEnum::Old(Box::new(&connector::Worldline)))

@@ -30,22 +30,21 @@ use hyperswitch_domain_models::{
     payment_method_data::PaymentMethodData,
     router_data::{AccessToken, ConnectorAuthType, ErrorResponse, RouterData},
     router_data_v2::{
-        flow_common_types::WebhookSourceVerifyData, AccessTokenFlowData, MandateRevokeFlowData,
+        flow_common_types::WebhookSourceVerifyData, AccessTokenFlowData, MandateRevokeFlowData, flow_common_types::GetAdditionalRecoveryDataCommon,
         UasFlowData,
     },
     router_flow_types::{
-        mandate_revoke::MandateRevoke, AccessTokenAuth, PostAuthenticate, PreAuthenticate,
-        VerifyWebhookSource,
+        mandate_revoke::MandateRevoke, AccessTokenAuth, GetRecoveryDetails, PostAuthenticate, PreAuthenticate, VerifyWebhookSource ,
     },
     router_request_types::{
         unified_authentication_service::{
             UasAuthenticationResponseData, UasPostAuthenticationRequestData,
             UasPreAuthenticationRequestData,
         },
-        AccessTokenRequestData, MandateRevokeRequestData, VerifyWebhookSourceRequestData,
+        AccessTokenRequestData, MandateRevokeRequestData, VerifyWebhookSourceRequestData, GetRecoveryDetailsRequestData
     },
     router_response_types::{
-        ConnectorInfo, MandateRevokeResponseData, PaymentMethodDetails, SupportedPaymentMethods,
+        ConnectorInfo, MandateRevokeResponseData, PaymentMethodDetails, SupportedPaymentMethods, GetRecoveryDetailsResponseData,
         VerifyWebhookSourceResponseData,
     },
 };
@@ -369,6 +368,30 @@ pub trait ConnectorVerifyWebhookSourceV2:
 {
 }
 
+///trait ConnectorGetRecoveryDetails
+pub trait ConnectorGetRecoveryDetails:
+    ConnectorIntegration<
+    GetRecoveryDetails,
+    GetRecoveryDetailsRequestData,
+    GetRecoveryDetailsResponseData,
+    >
+{
+}  
+
+
+///trait ConnectorGetRecoveryDetailsV2
+pub trait ConnectorGetRecoveryDetailsV2:
+    ConnectorIntegrationV2<
+    GetRecoveryDetails,
+    GetAdditionalRecoveryDataCommon,
+    GetRecoveryDetailsRequestData,
+    GetRecoveryDetailsResponseData,
+>
+{ 
+}
+
+
+
 /// trait UnifiedAuthenticationService
 pub trait UnifiedAuthenticationService:
     ConnectorCommon + UasPreAuthentication + UasPostAuthentication
@@ -422,6 +445,7 @@ pub trait UasPostAuthenticationV2:
 >
 {
 }
+
 
 /// trait ConnectorValidation
 pub trait ConnectorValidation: ConnectorCommon + ConnectorSpecifications {

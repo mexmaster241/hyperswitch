@@ -14,7 +14,7 @@ pub mod setup_mandate_flow;
 use async_trait::async_trait;
 use hyperswitch_domain_models::{
     mandates::CustomerAcceptance,
-    router_flow_types::{PostAuthenticate, PreAuthenticate},
+    router_flow_types::{PostAuthenticate, PreAuthenticate,GetRecoveryDetails},
     router_request_types::PaymentsCaptureData,
 };
 use hyperswitch_interfaces::api::{
@@ -238,6 +238,70 @@ default_imp_for_complete_authorize!(
     connector::Wellsfargo,
     connector::Wellsfargopayout
 );
+
+macro_rules! default_imp_for_additional_recovery_call {
+    ($($path:ident::$connector:ident),*) => {
+        $(
+            impl api::ConnectorGetRecoveryDetails for $path::$connector {}
+            impl
+            services::ConnectorIntegration<
+            GetRecoveryDetails,
+            types::GetRecoveryDetailsRequestData,
+            types::GetRecoveryDetailsResponseData,
+        > for $path::$connector
+        {}
+    )*
+    };
+}
+
+#[cfg(feature = "dummy_connector")]
+impl<const T: u8> api::ConnectorGetRecoveryDetails for connector::DummyConnector<T> {}
+#[cfg(feature = "dummy_connector")]
+impl<const T: u8>
+        services::ConnectorIntegration<
+        GetRecoveryDetails,
+        types::GetRecoveryDetailsRequestData,
+        types::GetRecoveryDetailsResponseData,
+    > for connector::DummyConnector<T>
+{
+}
+
+default_imp_for_additional_recovery_call!(
+    connector::Adyenplatform,
+    connector::Aci,
+    connector::Adyen,
+    connector::Authorizedotnet,
+    connector::Bankofamerica,
+    connector::Braintree,
+    connector::Checkout,
+    connector::Cybersource,
+    connector::Ebanx,
+    connector::Globalpay,
+    connector::Gpayments,
+    connector::Iatapay,
+    connector::Itaubank,
+    connector::Klarna,
+    connector::Mifinity,
+    connector::Netcetera,
+    connector::Nmi,
+    connector::Nuvei,
+    connector::Payme,
+    connector::Noon,
+    connector::Opayo,
+    connector::Opennode,
+    connector::Payone,
+    connector::Plaid,
+    connector::Paypal,
+    connector::Riskified,
+    connector::Signifyd,
+    connector::Stripe,
+    connector::Threedsecureio,
+    connector::Trustpay,
+    connector::Wise,
+    connector::Wellsfargo,
+    connector::Wellsfargopayout
+);
+
 macro_rules! default_imp_for_webhook_source_verification {
     ($($path:ident::$connector:ident),*) => {
         $(
@@ -497,6 +561,7 @@ default_imp_for_connector_request_id!(
     connector::Square,
     connector::Stax,
     connector::Stripe,
+    connector::Stripebilling,
     connector::Taxjar,
     connector::Threedsecureio,
     connector::Trustpay,
@@ -1636,6 +1701,7 @@ default_imp_for_fraud_check!(
     connector::Square,
     connector::Stax,
     connector::Stripe,
+    connector::Stripebilling,
     connector::Taxjar,
     connector::Threedsecureio,
     connector::Trustpay,
@@ -2243,6 +2309,7 @@ default_imp_for_connector_authentication!(
     connector::Square,
     connector::Stax,
     connector::Stripe,
+    connector::Stripebilling,
     connector::Taxjar,
     connector::Trustpay,
     connector::Tsys,

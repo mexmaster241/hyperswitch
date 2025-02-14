@@ -1,5 +1,6 @@
 //! Webhooks interface
 
+use api_models::webhooks::ConnectorWebhookSecrets;
 use common_utils::{crypto, errors::CustomResult, ext_traits::ValueExt};
 use error_stack::ResultExt;
 use hyperswitch_domain_models::{
@@ -183,7 +184,8 @@ pub trait IncomingWebhook: ConnectorCommon + Sync {
         let algorithm = self
             .get_webhook_source_verification_algorithm(request)
             .change_context(errors::ConnectorError::WebhookSourceVerificationFailed)?;
-
+        
+        println!("here at verify webhook source");
         let connector_webhook_secrets = self
             .get_webhook_source_verification_merchant_secret(
                 merchant_id,
@@ -284,7 +286,6 @@ pub trait IncomingWebhook: ConnectorCommon + Sync {
     fn get_recovery_details(
         &self,
         _request: &IncomingWebhookRequestDetails<'_>,
-        _additional_data : Option<Vec<u8>>
     ) -> CustomResult<
         RecoveryPayload,
         errors::ConnectorError,

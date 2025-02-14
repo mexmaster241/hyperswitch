@@ -209,7 +209,7 @@ pub type UasPostAuthenticationType = dyn ConnectorIntegration<
 >;
 
 /// Type alias for `ConnectorIntegration<GetRecoveryDetails, GetRecoveryDetailsRequestData, GetRecoveryDetailsResponseData>`
-pub type FetchPaymentAttemptDetailsType = dyn ConnectorIntegration<
+pub type GetAdditionalRecoveryDetailsType = dyn ConnectorIntegration<
     GetRecoveryDetails, 
     GetRecoveryDetailsRequestData, 
     GetRecoveryDetailsResponseData

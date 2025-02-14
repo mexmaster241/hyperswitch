@@ -32,7 +32,7 @@ use hyperswitch_domain_models::{
             CreateConnectorCustomer, IncrementalAuthorization, PostProcessing, PostSessionTokens,
             PreProcessing, Reject, SdkSessionUpdate,
         },
-        webhooks::VerifyWebhookSource,
+        webhooks::{VerifyWebhookSource,GetRecoveryDetails},
         PostAuthenticate, PreAuthenticate,
     },
     router_request_types::{
@@ -45,12 +45,12 @@ use hyperswitch_domain_models::{
         PaymentsApproveData, PaymentsIncrementalAuthorizationData, PaymentsPostProcessingData,
         PaymentsPostSessionTokensData, PaymentsPreProcessingData, PaymentsRejectData,
         PaymentsTaxCalculationData, RetrieveFileRequestData, SdkPaymentsSessionUpdateData,
-        SubmitEvidenceRequestData, UploadFileRequestData, VerifyWebhookSourceRequestData,
+        SubmitEvidenceRequestData, UploadFileRequestData, VerifyWebhookSourceRequestData, GetRecoveryDetailsRequestData
     },
     router_response_types::{
         AcceptDisputeResponse, DefendDisputeResponse, MandateRevokeResponseData,
         PaymentsResponseData, RetrieveFileResponse, SubmitEvidenceResponse,
-        TaxCalculationResponseData, UploadFileResponse, VerifyWebhookSourceResponseData,
+        TaxCalculationResponseData, UploadFileResponse, VerifyWebhookSourceResponseData, GetRecoveryDetailsResponseData
     },
 };
 #[cfg(feature = "frm")]
@@ -880,6 +880,79 @@ macro_rules! default_imp_for_reject {
 
 default_imp_for_reject!(
 	connectors::Stripebilling,
+    connectors::Airwallex,
+    connectors::Amazonpay,
+    connectors::Bambora,
+    connectors::Bamboraapac,
+    connectors::Billwerk,
+    connectors::Bitpay,
+    connectors::Bluesnap,
+    connectors::Boku,
+    connectors::Cashtocode,
+    connectors::Chargebee,
+    connectors::Coinbase,
+    connectors::Cryptopay,
+    connectors::Datatrans,
+    connectors::Deutschebank,
+    connectors::Digitalvirgo,
+    connectors::Dlocal,
+    connectors::Elavon,
+    connectors::Fiserv,
+    connectors::Fiservemea,
+    connectors::Fiuu,
+    connectors::Forte,
+    connectors::Globepay,
+    connectors::Gocardless,
+    connectors::Helcim,
+    connectors::Inespay,
+    connectors::Jpmorgan,
+    connectors::Nomupay,
+    connectors::Novalnet,
+    connectors::Nexinets,
+    connectors::Nexixpay,
+    connectors::Paybox,
+    connectors::Payeezy,
+    connectors::Payu,
+    connectors::Placetopay,
+    connectors::Powertranz,
+    connectors::Prophetpay,
+    connectors::Mollie,
+    connectors::Multisafepay,
+    connectors::Rapyd,
+    connectors::Razorpay,
+    connectors::Redsys,
+    connectors::Shift4,
+    connectors::Stax,
+    connectors::Square,
+    connectors::Taxjar,
+    connectors::Thunes,
+    connectors::Tsys,
+    connectors::UnifiedAuthenticationService,
+    connectors::Worldline,
+    connectors::Worldpay,
+    connectors::Volt,
+    connectors::Xendit,
+    connectors::Zen,
+    connectors::Zsl,
+    connectors::CtpMastercard
+);
+
+macro_rules! default_imp_for_additonal_recovery_details_call {
+    ($($path:ident::$connector:ident),*) => {
+        $(
+            impl api::ConnectorGetRecoveryDetails for $path::$connector {}
+            impl
+            ConnectorIntegration<
+            GetRecoveryDetails,
+            GetRecoveryDetailsRequestData,
+            GetRecoveryDetailsResponseData,
+        > for $path::$connector
+        {}
+    )*
+    };
+}
+
+default_imp_for_additonal_recovery_details_call!(
     connectors::Airwallex,
     connectors::Amazonpay,
     connectors::Bambora,

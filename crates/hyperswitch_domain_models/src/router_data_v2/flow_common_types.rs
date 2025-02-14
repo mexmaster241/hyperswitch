@@ -132,6 +132,10 @@ pub struct WebhookSourceVerifyData {
     pub merchant_id: common_utils::id_type::MerchantId,
 }
 
+#[derive(Debug,Clone)]
+
+pub struct GetAdditionalRecoveryDataCommon;
+
 #[derive(Debug, Clone)]
 pub struct AccessTokenFlowData {}
 

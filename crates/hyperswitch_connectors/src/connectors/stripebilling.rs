@@ -3,7 +3,8 @@ use error_stack::{report, ResultExt};
 use masking::{ExposeInterface, Mask, Secret};
 use serde_json::json;
 use common_utils::ext_traits::ByteSliceExt;
-
+use serde_json::{self,Value};
+use masking::PeekInterface;
 use std::collections::HashMap;
 
 use common_utils::{
@@ -24,6 +25,7 @@ use hyperswitch_domain_models::{
         refunds::{Execute, RSync},
         webhooks::GetRecoveryDetails,
     },
+    // router_data_v2::flow_common_types::GetAdditionalRecoveryDataCommon,
     router_request_types::{
         AccessTokenRequestData, PaymentMethodTokenizationData,
         PaymentsAuthorizeData, PaymentsCancelData, PaymentsCaptureData, PaymentsSessionData,
@@ -42,6 +44,7 @@ use hyperswitch_interfaces::{
     events::connector_api_logs::ConnectorEvent,
     types::{self, Response},
     webhooks,
+    // connector_integration_v2::ConnectorIntegrationV2,
 };
 use crate::{
     constants::headers,
@@ -79,6 +82,7 @@ impl api::Refund for Stripebilling {}
 impl api::RefundExecute for Stripebilling {}
 impl api::RefundSync for Stripebilling {}
 impl api::PaymentToken for Stripebilling {}
+impl api::ConnectorGetRecoveryDetails for Stripebilling {}
 
 impl
     ConnectorIntegration<
@@ -108,6 +112,10 @@ where
     }
 }
 
+// impl<Flow,GetAdditionalRecoveryDataCommon,Reques,Response> ConnectorCommonExt<Flow,GetAdditionalRecoveryDataCommon,Request,Response> for Stripebilling
+// where 
+//     Self: ConnectorIntegrationV2<Flow,Get>
+
 impl ConnectorCommon for Stripebilling {
     fn id(&self) -> &'static str {
         "stripebilling"
@@ -128,7 +136,12 @@ impl ConnectorCommon for Stripebilling {
     fn get_auth_header(&self, auth_type:&ConnectorAuthType)-> CustomResult<Vec<(String,masking::Maskable<String>)>,errors::ConnectorError> {
         let auth =  stripebilling::StripebillingAuthType::try_from(auth_type)
             .change_context(errors::ConnectorError::FailedToObtainAuthType)?;
-        Ok(vec![(headers::AUTHORIZATION.to_string(), auth.api_key.expose().into_masked())])
+        Ok(vec![
+            (
+                headers::AUTHORIZATION.to_string(),
+                format!("Bearer {}", auth.api_key.peek()).into_masked(),
+            )
+            ])
     }
 
     fn build_error_response(
@@ -532,6 +545,7 @@ impl
     }
 }
 
+#[async_trait::async_trait]
 impl 
     ConnectorIntegration<
         GetRecoveryDetails,
@@ -570,9 +584,9 @@ impl
     ) -> CustomResult<Option<Request>, errors::ConnectorError> {
         let request = RequestBuilder::new()
             .method(Method::Get)
-            .url(&types::FetchPaymentAttemptDetailsType::get_url(self,req, connectors)?)
+            .url(&types::GetAdditionalRecoveryDetailsType::get_url(self,req, connectors)?)
             .attach_default_headers()
-            .headers(types::FetchPaymentAttemptDetailsType::get_headers(self,req,connectors)?)
+            .headers(types::GetAdditionalRecoveryDetailsType::get_headers(self,req,connectors)?)
             .build();
         Ok(Some(request))
     }
@@ -585,9 +599,9 @@ impl
         res: Response,
     ) -> CustomResult<GetRecoveryDetailsRouterData, errors::ConnectorError>
     {
-        
-       let response : transformers::StripebillingRecoveryDetailsData = res
-            .response.parse_struct::<transformers::StripebillingRecoveryDetailsData>("StripebillingRecoveryDetailsData")
+       let response : StripebillingRecoveryDetailsData = res
+            .response
+            .parse_struct::<StripebillingRecoveryDetailsData>("StripebillingRecoveryDetailsData")
             .change_context(errors::ConnectorError::ResponseDeserializationFailed)?;
 
        event_builder.map(|i| i.set_response_body(&response));
@@ -692,8 +706,11 @@ impl webhooks::IncomingWebhook for Stripebilling {
         &self,
         request: &webhooks::IncomingWebhookRequestDetails<'_>,
     ) -> CustomResult<api_models::webhooks::IncomingWebhookEvent, errors::ConnectorError> {
+
         let webhook = StripebillingWebhookBody::get_webhook_object_from_body(request.body)
             .change_context(errors::ConnectorError::WebhookEventTypeNotFound)?;
+
+        println!("{:?}",webhook);
         let event = match webhook.event_type {
             transformers::StripebillingEventType::PaymentSucceeded => {
                 api_models::webhooks::IncomingWebhookEvent::RecoveryPaymentSuccess
@@ -720,25 +737,19 @@ impl webhooks::IncomingWebhook for Stripebilling {
     fn get_recovery_details(
         &self,
         request: &webhooks::IncomingWebhookRequestDetails<'_>,
-        additional_data : Option<Vec<u8>>
     ) -> CustomResult<RecoveryPayload, errors::ConnectorError>
     {
+
         let webhook = StripebillingWebhookBody::get_webhook_object_from_body(request.body)?;
 
-        match additional_data{
-            Some(data)=>{
-                let additional_data_payload = data
-                .parse_struct::<StripebillingRecoveryDetailsData>("StripebillingRecoveryDetailsData")
-                .change_context(errors::ConnectorError::WebhookBodyDecodingFailed)?;
+        RecoveryPayload::try_from(webhook)
 
-                let recovery_payload = transformers::StripebillingRevenueRecoveryDetails::from_webhook_and_additional_data(&webhook,&additional_data_payload);
-                 
-                Ok(RecoveryPayload::try_from(recovery_payload)?)
-            },
-            None => Ok(RecoveryPayload::try_from(webhook)?)
-        }
     }
+
+
 }
+
+
 
 fn get_signature_elements_from_header(
     headers : &actix_web::http::header::HeaderMap

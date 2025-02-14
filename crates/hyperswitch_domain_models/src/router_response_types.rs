@@ -4,6 +4,7 @@ use std::collections::HashMap;
 
 use common_utils::{request::Method, types as common_types, types::MinorUnit};
 pub use disputes::{AcceptDisputeResponse, DefendDisputeResponse, SubmitEvidenceResponse};
+use time::PrimitiveDateTime;
 
 use crate::{
     errors::api_error_response::ApiErrorResponse,
@@ -576,23 +577,41 @@ impl SupportedPaymentMethodsExt for SupportedPaymentMethods {
 }
 
 
-#[derive(Debug, Clone, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Deserialize,serde::Serialize)]
 pub struct GetRecoveryDetailsResponseData{
+    pub status : Option<GetAdditionalRecoveryDetailsStatus>,
+    pub payment_method : Option<String>,
+    pub payment_processor_error_code : Option<String>,
+    pub payment_processor_error_message : Option<String>,
+    pub payment_method_details : Option<RecoveryPaymentMethodDetails>,
+    pub created_at : Option<PrimitiveDateTime>
+}
 
-    // pub transaction_id : String,
-    pub status : FetchAttemptDetailsStatus,
-    // pub amount : i64,
-    // pub currency : common_enums::Currency,
-    // pub customer : String,
-    pub payment_method : String,
-    pub error_code : String,
-    pub error_message : String,
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
+pub struct RecoveryPaymentMethodDetails{
+    #[serde(rename="type")]
+    pub type_of_card : String,
+    #[serde(rename="card")]
+    pub card_details : RecoveryCardDetails,
+}
 
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
+pub struct RecoveryCardDetails{
+    pub funding : FundingTypes
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
+#[serde(rename="snake_case")]
+pub enum FundingTypes {
+    Credit,
+    Debit,
+    Prepaid,
+    Unknown
 }
 
 
-#[derive(Clone, Debug,serde::Deserialize)]
-pub enum FetchAttemptDetailsStatus{
+#[derive(Clone, Debug,serde::Deserialize,serde::Serialize)]
+pub enum GetAdditionalRecoveryDetailsStatus{
     Succeeded,
     Failed,
     Pending

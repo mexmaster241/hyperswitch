@@ -3,7 +3,7 @@ use hyperswitch_domain_models::{
     router_data_v2::{
         flow_common_types::{
             DisputesFlowData, MandateRevokeFlowData, PaymentFlowData, RefundFlowData,
-            WebhookSourceVerifyData,
+            WebhookSourceVerifyData, GetAdditionalRecoveryDataCommon
         },
         AccessTokenFlowData, FilesFlowData,
     },

@@ -152,6 +152,10 @@ async fn incoming_webhooks_core<W: types::OutgoingWebhookType>(
     // This is used for source verification and webhooks integrity
     let (merchant_connector_account, connector, connector_name) =
         fetch_mca_and_connector(&state, connector_id, &key_store).await?;
+    
+    logger::info!(connector=connector_name);
+
+    
 
     let decoded_body = connector
         .decode_webhook_body(
@@ -356,6 +360,8 @@ async fn incoming_webhooks_core<W: types::OutgoingWebhookType>(
                     api::WebhookFlow::Recovery => Box::pin(recovery_incoming::recovery_incoming_webhook_flow(
                         state.clone(),
                         merchant_account,
+                        merchant_connector_account.clone(),
+                        &connector_name,
                         profile,
                         key_store,
                         webhook_details,
