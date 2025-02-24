@@ -5219,6 +5219,16 @@
               "type": "string",
               "nullable": true
             }
+          },
+          {
+            "name": "is_delivered",
+            "in": "query",
+            "description": "Only include Events which are ultimately delivered to the merchant.",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "nullable": true
+            }
           }
         ],
         "responses": {
@@ -11109,7 +11119,7 @@
           },
           "is_delivery_successful": {
             "type": "boolean",
-            "description": "Indicates whether the webhook delivery attempt was successful."
+            "description": "Indicates whether the webhook was ultimately delivery."
           },
           "initial_attempt_id": {
             "type": "string",
@@ -25543,6 +25553,7 @@
       },
       "TotalEventsResponse": {
         "type": "object",
+        "description": "The response body of list initial delivery attempts api call.",
         "required": [
           "events",
           "total_count"
@@ -25552,11 +25563,13 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/EventListItemResponse"
-            }
+            },
+            "description": "The list of events"
           },
           "total_count": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "description": "Count of total events"
           }
         }
       },
