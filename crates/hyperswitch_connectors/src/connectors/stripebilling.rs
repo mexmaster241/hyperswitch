@@ -612,6 +612,7 @@ impl
         data: data.clone(),
         http_code: res.status_code,
        })
+       
     }
 
     fn get_error_response(
