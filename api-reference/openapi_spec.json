@@ -25543,6 +25543,7 @@
       },
       "TotalEventsResponse": {
         "type": "object",
+        "description": "The response body of list initial delivery attempts api call.",
         "required": [
           "events",
           "total_count"
@@ -25552,11 +25553,13 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/EventListItemResponse"
-            }
+            },
+            "description": "The list of events"
           },
           "total_count": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "description": "Count of total events"
           }
         }
       },
