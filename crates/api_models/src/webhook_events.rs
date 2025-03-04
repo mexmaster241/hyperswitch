@@ -40,7 +40,7 @@ pub enum EventListConstraintsInternal {
         created_before: Option<PrimitiveDateTime>,
         limit: Option<i64>,
         offset: Option<i64>,
-        is_delivered: Option<bool>,
+        is_delivered: Option<bool>
     },
     ObjectIdFilter {
         object_id: String,
