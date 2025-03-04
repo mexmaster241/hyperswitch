@@ -207,7 +207,7 @@ impl EventInterface for Store {
             created_before,
             limit,
             offset,
-            is_delivered
+            is_delivered,
         )
         .await
         .map_err(|error| report!(errors::StorageError::from(error)))
@@ -320,7 +320,7 @@ impl EventInterface for Store {
             created_before,
             limit,
             offset,
-            is_delivered
+            is_delivered,
         )
         .await
         .map_err(|error| report!(errors::StorageError::from(error)))
@@ -382,7 +382,7 @@ impl EventInterface for Store {
             profile_id,
             created_after,
             created_before,
-            is_delivered
+            is_delivered,
         )
         .await
         .map_err(|error| report!(errors::StorageError::from(error)))
