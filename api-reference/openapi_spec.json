@@ -11118,7 +11118,7 @@
           },
           "is_delivery_successful": {
             "type": "boolean",
-            "description": "Indicates whether the webhook was ultimately delivered, since this takes value from is_overall_delivery_column, the value may not be present for old data, hence this field is kept optional.",
+            "description": "Indicates whether the webhook was ultimately delivered or not.",
             "nullable": true
           },
           "initial_attempt_id": {
